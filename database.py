@@ -51,12 +51,13 @@ import os
 import mysql.connector
 from mysql.connector import pooling
 
-DB_CONFIG = {
-    "host": os.environ.get("DB_HOST", "localhost"),
-    "user": os.environ.get("DB_USER", "root"),
-    "password": os.environ.get("DB_PASSWORD", "Harish1507@"),
-    "database": os.environ.get("DB_NAME", "smart_student_tracker"),
-}
+conn = mysql.connector.connect(
+    host=os.getenv("DB_HOST"),
+    port=int(os.getenv("DB_PORT")),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+    database=os.getenv("DB_NAME")
+)
 
 _pool = None
 
