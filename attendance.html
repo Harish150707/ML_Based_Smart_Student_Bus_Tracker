@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance · Smart Student Tracking System{% endblock %}
+{% block page_title %}Attendance{% endblock %}
+
+{% block content %}
+<div class="panel">
+
+  <h4 class="mb-4"><i class="fa fa-calendar-check" style="color:var(--teal-500);"></i> Attendance Report</h4>
+
+  <form method="GET" class="row g-2 mb-4">
+
+    <div class="col-md-4">
+      <input type="text"
+             name="search"
+             class="form-control"
+             placeholder="Search by Name or Roll No"
+             value="{{ search }}">
+    </div>
+
+    <div class="col-md-3">
+      <input type="date" name="date" class="form-control" value="{{ date }}">
+    </div>
+
+    <div class="col-md-5 d-flex gap-2 flex-wrap">
+      <button class="btn" style="background:var(--teal-500); color:#fff;">
+        <i class="fa fa-search"></i> Search
+      </button>
+      <a href="/attendance" class="btn btn-outline-dark">
+        <i class="fa fa-rotate-left"></i> Reset
+      </a>
+      <a href="/export_excel" class="btn btn-outline-success">
+        <i class="fa fa-file-excel"></i> Excel
+      </a>
+      <a href="/export_pdf" class="btn btn-outline-danger">
+        <i class="fa fa-file-pdf"></i> PDF
+      </a>
+    </div>
+
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr class="text-muted small text-uppercase">
+          <th>ID</th>
+          <th>Student Name</th>
+          <th>Roll No</th>
+          <th>Bus No</th>
+          <th>Route</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in records %}
+        <tr>
+          <td class="mono">{{ row.attendance_id }}</td>
+          <td>{{ row.student_name }}</td>
+          <td class="mono">{{ row.roll_no }}</td>
+          <td>
+            {% if row.bus_no %}
+              <span class="badge" style="background:var(--teal-500);">{{ row.bus_no }}</span>
+            {% else %}
+              <span class="badge bg-secondary">Not Assigned</span>
+            {% endif %}
+          </td>
+          <td>{{ row.route_name if row.route_name else '-' }}</td>
+          <td class="mono">{{ row.attendance_date }}</td>
+          <td class="mono">{{ row.attendance_time }}</td>
+          <td>
+            {% if row.status=="Present" %}
+              <span class="badge" style="background:var(--teal-500);">Present</span>
+            {% else %}
+              <span class="badge" style="background:var(--red-500);">Absent</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center text-muted">No attendance records found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

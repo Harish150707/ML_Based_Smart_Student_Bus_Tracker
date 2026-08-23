@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Buses · Smart Student Tracking System{% endblock %}
+{% block page_title %}Buses{% endblock %}
+
+{% block content %}
+<div class="panel">
+
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="mb-0"><i class="fa fa-bus" style="color:var(--teal-500);"></i> Bus Details</h4>
+    <a href="/add_bus" class="btn" style="background:var(--teal-500); color:#fff;">
+      <i class="fa fa-plus"></i> Add Bus
+    </a>
+  </div>
+
+  <input type="text"
+         id="search"
+         class="form-control mb-3"
+         placeholder="Search Bus..."
+         onkeyup="searchTable()">
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle" id="busTable">
+      <thead>
+        <tr class="text-muted small text-uppercase">
+          <th>Bus ID</th>
+          <th>Bus Number</th>
+          <th>Driver Name</th>
+          <th>Driver Phone</th>
+          <th>Route</th>
+          <th>Capacity</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bus in buses %}
+        <tr>
+          <td class="mono">{{ bus.bus_id }}</td>
+          <td><span class="badge" style="background:var(--teal-500);">{{ bus.bus_no }}</span></td>
+          <td>{{ bus.driver_name }}</td>
+          <td>{{ bus.driver_phone }}</td>
+          <td>{{ bus.route_name }}</td>
+          <td>{{ bus.capacity }}</td>
+          <td class="text-nowrap">
+            <a href="/edit_bus/{{ bus.bus_id }}" class="btn btn-outline-dark btn-sm">
+              <i class="fa fa-edit"></i>
+            </a>
+            <a href="/delete_bus/{{ bus.bus_id }}"
+               class="btn btn-outline-danger btn-sm"
+               onclick="return confirm('Delete this bus?')">
+              <i class="fa fa-trash"></i>
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="text-center text-muted">No buses found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function searchTable(){
+  let input = document.getElementById("search").value.toLowerCase();
+  let table = document.getElementById("busTable");
+  let rows = table.getElementsByTagName("tr");
+
+  for (let i = 1; i < rows.length; i++) {
+    let txt = rows[i].textContent.toLowerCase();
+    rows[i].style.display = txt.indexOf(input) > -1 ? "" : "none";
+  }
+}
+</script>
+{% endblock %}

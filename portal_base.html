@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Smart Student Tracking System{% endblock %}</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+{% block extra_head %}{% endblock %}
+</head>
+<body style="background:var(--slate-50);">
+
+{% import "_macros.html" as ui %}
+
+<nav class="portal-nav">
+  <div class="d-flex align-items-center gap-2">
+    {{ ui.logo(26, 'dark') }}
+    <span class="brand" style="color:var(--white);font-weight:700;">Smart Tracker</span>
+    <span class="badge ms-2" style="background:var(--teal-500);color:var(--navy-950);">{% block role_label %}Portal{% endblock %}</span>
+  </div>
+  <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-light">
+    <i class="fas fa-right-from-bracket"></i> Logout
+  </a>
+</nav>
+
+<div class="portal-content">
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for m in messages %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          {{ m }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_scripts %}{% endblock %}
+
+</body>
+</html>

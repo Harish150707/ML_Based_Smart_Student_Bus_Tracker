@@ -1,0 +1,106 @@
+{% extends "portal_base.html" %}
+
+{% block title %}Driver Dashboard · Smart Student Tracking System{% endblock %}
+{% block role_label %}Driver{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+<style>
+  #map{ height:480px; width:100%; border-radius:var(--radius-lg); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h4 class="mb-4"><i class="fa fa-bus" style="color:var(--teal-500);"></i> Driver Dashboard</h4>
+
+<div class="row g-4">
+
+  <div class="col-md-4">
+    <div class="panel">
+      <h5 class="mb-3"><i class="fa fa-id-card"></i> Driver Information</h5>
+
+      <p><strong>Bus ID:</strong> <span class="mono">{{ session["bus_id"] }}</span></p>
+
+      <p><span class="status-pill live"><span class="dot"></span> Ready for GPS Sharing</span></p>
+
+      <button class="btn w-100" style="background:var(--teal-500); color:#fff;" onclick="startGPS()">
+        <i class="fa fa-location-arrow"></i> Start Live GPS
+      </button>
+
+      <div class="mt-3 small text-muted" id="status"></div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="panel">
+      <h5 class="mb-3"><i class="fa fa-map-location-dot"></i> Live Bus Location</h5>
+      <div id="map"></div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+
+var map = L.map('map').setView([12.9716, 77.5946], 15);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
+}).addTo(map);
+
+var marker = L.marker([12.9716, 77.5946]).addTo(map);
+
+function startGPS(){
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported.");
+        return;
+    }
+
+    navigator.geolocation.watchPosition(
+        sendLocation,
+        showError,
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
+}
+
+function sendLocation(position){
+    let latitude = position.coords.latitude;
+    let longitude = position.coords.longitude;
+
+    document.getElementById("status").innerHTML =
+        "<strong>Latitude:</strong> " + latitude +
+        "<br><strong>Longitude:</strong> " + longitude;
+
+    marker.setLatLng([latitude, longitude]);
+    map.setView([latitude, longitude], 17);
+
+    fetch("/update_bus_location", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "bus_id={{ session['bus_id'] }}&latitude=" + latitude + "&longitude=" + longitude
+    }).catch(err => console.error("Failed to send location:", err));
+}
+
+function showError(error){
+    switch (error.code) {
+        case error.PERMISSION_DENIED:
+            alert("Location permission denied.");
+            break;
+        case error.POSITION_UNAVAILABLE:
+            alert("Location unavailable.");
+            break;
+        case error.TIMEOUT:
+            alert("Location request timed out.");
+            break;
+        default:
+            alert("Unknown GPS error.");
+    }
+}
+
+</script>
+{% endblock %}
