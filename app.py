@@ -992,6 +992,39 @@ def delete_parent(id):
         conn.close()
 
     return redirect(url_for("view_parents"))
+@app.route("/parent_register", methods=["GET", "POST"])
+def parent_register():
+    if request.method == "POST":
+        name = request.form.get("name")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        phone = request.form.get("phone")
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute(
+                """
+                INSERT INTO parents (name, email, password, phone)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (name, email, password, phone)
+            )
+
+            conn.commit()
+
+            return redirect(url_for("parent_login"))
+
+        except Exception as e:
+            conn.rollback()
+            return f"Registration failed: {e}", 500
+
+        finally:
+            cursor.close()
+            conn.close()
+
+    return render_template("parent_register.html")
 
 
 if __name__ == "__main__":
