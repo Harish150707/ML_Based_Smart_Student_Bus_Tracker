@@ -51,7 +51,7 @@ import os
 import mysql.connector
 from mysql.connector import pooling
 
-conn = mysql.connector.connect(
+DB_CONFIG= mysql.connector.connect(
     host=os.getenv("DB_HOST"),
     port=int(os.getenv("DB_PORT")),
     user=os.getenv("DB_USER"),
