@@ -2,62 +2,26 @@
 database.py
 Centralized MySQL connection handling for the Smart Student Tracking System.
 
-Why this file exists
----------------------
-The old code opened a single global `db` connection at import time and reused
-it for the lifetime of the Flask process, while a couple of routes ALSO opened
-their own separate `mysql.connector.connect(...)` with credentials copy-pasted
-in multiple places. Two problems with that:
-
-1. MySQL drops idle connections after a timeout (often just a few hours on
-   default config). A long-lived global connection WILL die mid-session,
-   and every route using it will start throwing
-   "MySQL server has gone away" — usually right when you don't want it to
-   (e.g. during your project demo).
-
-2. Hardcoded credentials duplicated across the codebase are a pain to
-   rotate and a security smell if the code is ever shared/committed.
-
-This module fixes both: every request grabs a fresh, valid connection from a
-pool and returns it when done. Credentials come from environment variables
-with safe fallbacks, so nothing breaks if you haven't set them yet.
-
-Usage in app.py
-----------------
-    from database import get_db_connection
-
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM students")
-        rows = cursor.fetchall()
-        cursor.close()
-    finally:
-        conn.close()   # returns the connection to the pool, does NOT destroy it
-
-Setting real credentials (recommended before you deploy/share this project)
------------------------------------------------------------------------------
-Windows (PowerShell), run once per session or add to your system env vars:
-    $env:DB_HOST="localhost"
-    $env:DB_USER="root"
-    $env:DB_PASSWORD="your_real_password"
-    $env:DB_NAME="smart_student_tracker"
-
-If you don't set these, the fallbacks below (matching your current setup)
-are used automatically.
+FIX: DB_CONFIG must be a plain dict of connection settings — passing it to
+MySQLConnectionPool via **DB_CONFIG unpacks it into keyword arguments
+(host=..., user=..., etc). A previous version accidentally set DB_CONFIG to
+the result of mysql.connector.connect(...), which returns a live connection
+OBJECT, not a dict — that object can't be unpacked with **, which is exactly
+the TypeError seen in production: "argument after ** must be a mapping, not
+MySQLConnection".
 """
 
 import os
 import mysql.connector
 from mysql.connector import pooling
 
-DB_CONFIG= mysql.connector.connect(
-    host=os.getenv("DB_HOST"),
-    port=int(os.getenv("DB_PORT")),
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD"),
-    database=os.getenv("DB_NAME")
-)
+DB_CONFIG = {
+    "host": os.environ.get("DB_HOST", "localhost"),
+    "port": int(os.environ.get("DB_PORT", "3306")),
+    "user": os.environ.get("DB_USER", "root"),
+    "password": os.environ.get("DB_PASSWORD", "Harish1507@"),
+    "database": os.environ.get("DB_NAME", "smart_student_tracker"),
+}
 
 _pool = None
 
@@ -78,10 +42,7 @@ def _get_pool():
 def get_db_connection():
     """
     Returns a live connection borrowed from the pool.
-
-    ALWAYS close() it when you're done (use try/finally, as shown above).
-    close() returns the connection to the pool for reuse — it does not
-    actually disconnect, so this is cheap to call on every request.
+    Always close() it when you're done (use try/finally).
     """
     try:
         return _get_pool().get_connection()
