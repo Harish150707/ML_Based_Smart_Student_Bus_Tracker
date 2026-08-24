@@ -207,7 +207,9 @@ def update_student(id):
     department = request.form["department"]
     year = request.form["year"]
     bus_no = request.form["bus_no"]
+    date_of_birth = request.form["date_of_birth"]
     parent_name = request.form["parent_name"]
+    parent_email = request.form["parent_email"]
     parent_phone = request.form["parent_phone"]
 
     conn = get_db_connection()
@@ -216,10 +218,11 @@ def update_student(id):
         cursor.execute("""
             UPDATE students
             SET student_name=%s, roll_no=%s, department=%s, year=%s,
-                bus_no=%s, parent_name=%s, parent_phone=%s
+                bus_no=%s, date_of_birth=%s, parent_name=%s,
+                parent_email=%s, parent_phone=%s
             WHERE student_id=%s
-        """, (student_name, roll_no, department, year, bus_no,
-              parent_name, parent_phone, id))
+        """, (student_name, roll_no, department, year, bus_no, date_of_birth,
+              parent_name, parent_email, parent_phone, id))
         conn.commit()
         cursor.close()
     finally:
