@@ -994,35 +994,58 @@ def delete_parent(id):
     return redirect(url_for("view_parents"))
 @app.route("/parent_register", methods=["GET", "POST"])
 def parent_register():
+    """
+    Self-service parent registration. A parent proves they're the actual
+    parent by supplying details only the school and the real parent would
+    know: the student's roll number, the student's date of birth, and the
+    parent's email already on file for that student — rather than being
+    able to register as "parent" of any student with no verification.
+    """
     if request.method == "POST":
-        name = request.form.get("name")
-        email = request.form.get("email")
+        roll_no = request.form.get("roll_no")
+        date_of_birth = request.form.get("date_of_birth")
+        parent_email = request.form.get("parent_email")
         password = request.form.get("password")
-        phone = request.form.get("phone")
+        confirm_password = request.form.get("confirm_password")
+
+        if password != confirm_password:
+            flash("Passwords do not match.")
+            return redirect(url_for("parent_register"))
 
         conn = get_db_connection()
-        cursor = conn.cursor()
-
         try:
-            cursor.execute(
-                """
-                INSERT INTO parents (name, email, password, phone)
+            cursor = conn.cursor(dictionary=True)
+
+            cursor.execute("""
+                SELECT student_id, parent_name FROM students
+                WHERE roll_no=%s AND date_of_birth=%s AND parent_email=%s
+            """, (roll_no, date_of_birth, parent_email))
+            student = cursor.fetchone()
+
+            if not student:
+                cursor.close()
+                flash("No matching student found. Check the roll number, date of birth, and parent email.")
+                return redirect(url_for("parent_register"))
+
+            cursor.execute("SELECT parent_id FROM parents WHERE email=%s", (parent_email,))
+            existing = cursor.fetchone()
+
+            if existing:
+                cursor.close()
+                flash("An account already exists for this email. Please log in instead.")
+                return redirect(url_for("parent_login"))
+
+            cursor.execute("""
+                INSERT INTO parents (parent_name, email, password, student_id)
                 VALUES (%s, %s, %s, %s)
-                """,
-                (name, email, password, phone)
-            )
-
+            """, (student["parent_name"], parent_email, password, student["student_id"]))
             conn.commit()
-
-            return redirect(url_for("parent_login"))
-
-        except Exception as e:
-            conn.rollback()
-            return f"Registration failed: {e}", 500
-
-        finally:
             cursor.close()
+        finally:
             conn.close()
+
+        flash("Registration successful. Please log in.")
+        return redirect(url_for("parent_login"))
 
     return render_template("parent_register.html")
 
